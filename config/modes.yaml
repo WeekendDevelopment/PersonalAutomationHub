@@ -1,0 +1,233 @@
+# newshub modes. Edit this file, then restart:  docker compose restart worker bot api
+#
+# A mode is one stream of news with its own interests, sources and schedule.
+# The mode's key (tech, gaming, f1) is also its Telegram command: /tech
+#
+# Per mode:
+#   emoji, title    how it looks in Telegram
+#   interests       keyword: weight. Whole-word, case-insensitive match.
+#                   A hit in the title counts double. Higher weight = more important.
+#   block           an item containing any of these words is dropped
+#   sources         where to look. type is the adapter in src/newshub/sources/
+#                   (rss, hackernews). boost is added to every item from that source.
+#   digest_times    local times (see timezone) for the scheduled digest. Quote them.
+#   digest_size     how many items per digest
+#   alert_score     optional: items scoring at least this, published in the last
+#                   6 hours, are pushed immediately instead of waiting for a digest
+#   max_age_hours   optional (default 48): ignore anything older
+
+timezone: Europe/London
+collect_every_minutes: 30
+
+modes:
+  tech:
+    emoji: "💻"
+    title: Technology
+    digest_times: ["08:00", "18:00"]
+    digest_size: 10
+    alert_score: 18
+    interests:
+      # platform & infrastructure
+      kubernetes: 4
+      k8s: 4
+      terraform: 4
+      opentofu: 3
+      platform engineering: 4
+      observability: 4
+      opentelemetry: 4
+      prometheus: 3
+      grafana: 3
+      helm: 2
+      argo cd: 3
+      gitops: 3
+      docker: 2
+      devops: 2
+      sre: 2
+      # integration & event-driven architecture
+      event-driven: 4
+      kafka: 3
+      nats: 3
+      microservices: 2
+      api gateway: 2
+      # AI
+      ai agents: 4
+      ai agent: 4
+      agentic: 4
+      mcp: 3
+      llm: 3
+      llms: 3
+      claude: 3
+      openai: 2
+      anthropic: 2
+      ai: 1
+      # general tech & science
+      rust: 2
+      python: 1
+      open source: 2
+      security: 1
+      linux: 1
+      space: 1
+      nasa: 1
+      physics: 1
+    block:
+      - sponsored
+      - webinar
+      - black friday
+      - coupon
+    sources:
+      - name: Hacker News
+        type: hackernews
+        options: { min_points: 100 }
+      - name: Kubernetes Blog
+        url: https://kubernetes.io/feed.xml
+        boost: 2
+      - name: HashiCorp Blog
+        url: https://www.hashicorp.com/blog/feed.xml
+        boost: 1
+      - name: Grafana Blog
+        url: https://grafana.com/blog/index.xml
+        boost: 1
+      - name: OpenTelemetry Blog
+        url: https://opentelemetry.io/blog/index.xml
+        boost: 1
+      - name: Platform Engineering
+        url: https://platformengineering.org/blog/rss.xml
+        boost: 1
+      - name: Confluent Blog
+        url: https://www.confluent.io/rss.xml
+      - name: The New Stack
+        url: https://thenewstack.io/feed/
+      - name: InfoQ
+        url: https://feed.infoq.com/
+      - name: Simon Willison
+        url: https://simonwillison.net/atom/everything/
+      - name: Ars Technica
+        url: https://feeds.arstechnica.com/arstechnica/index
+      - name: The Verge
+        url: https://www.theverge.com/rss/index.xml
+      - name: BBC Technology
+        url: https://feeds.bbci.co.uk/news/technology/rss.xml
+      - name: BBC Science
+        url: https://feeds.bbci.co.uk/news/science_and_environment/rss.xml
+
+  gaming:
+    emoji: "🎮"
+    title: Gaming
+    digest_times: ["12:30", "19:00"]
+    digest_size: 8
+    alert_score: 20
+    interests:
+      release date: 3
+      announced: 2
+      reveal: 2
+      trailer: 2
+      review: 2
+      launch: 2
+      delayed: 2
+      dlc: 1
+      expansion: 1
+      patch: 1
+      playstation: 2
+      ps5: 2
+      xbox: 2
+      nintendo: 2
+      switch 2: 3
+      steam: 2
+      steam deck: 2
+      pc: 1
+      gta: 3
+      zelda: 2
+      elden ring: 2
+      valve: 2
+      rockstar: 2
+      game pass: 2
+      f1 25: 3
+    block:
+      - deals
+      - deal
+      - discount
+      - sale
+      - wordle
+      - giveaway
+    sources:
+      - name: Eurogamer
+        url: https://www.eurogamer.net/feed
+      - name: IGN
+        url: https://feeds.feedburner.com/ign/all
+      - name: PC Gamer
+        url: https://www.pcgamer.com/rss/
+      - name: Rock Paper Shotgun
+        url: https://www.rockpapershotgun.com/feed
+      - name: GameSpot
+        url: https://www.gamespot.com/feeds/news/
+      - name: Polygon
+        url: https://www.polygon.com/rss/index.xml
+      - name: VGC
+        url: https://www.videogameschronicle.com/feed/
+        boost: 1
+
+  f1:
+    emoji: "🏎️"
+    title: Formula 1
+    digest_times: ["08:30", "20:00"]
+    digest_size: 8
+    alert_score: 24
+    interests:
+      # breaking-news words
+      wins: 3
+      pole: 3
+      penalty: 3
+      disqualified: 4
+      crash: 2
+      red flag: 2
+      signs: 3
+      contract: 3
+      confirmed: 2
+      announces: 2
+      retires: 3
+      upgrade: 1
+      regulations: 2
+      # sessions
+      grand prix: 2
+      qualifying: 2
+      sprint: 1
+      race: 1
+      # teams & people
+      fia: 2
+      mclaren: 2
+      ferrari: 2
+      red bull: 2
+      mercedes: 2
+      williams: 1
+      aston martin: 1
+      verstappen: 2
+      norris: 2
+      piastri: 2
+      hamilton: 2
+      leclerc: 2
+      russell: 2
+    block:
+      - fantasy
+      - quiz
+      - betting
+      - odds
+      - motogp
+      - nascar
+      - indycar
+    sources:
+      - name: BBC Sport F1
+        url: https://feeds.bbci.co.uk/sport/formula1/rss.xml
+        boost: 1
+      - name: Formula1.com
+        url: https://www.formula1.com/en/latest/all.xml
+        boost: 1
+      - name: Autosport
+        url: https://www.autosport.com/rss/f1/news/
+      - name: Motorsport.com
+        url: https://www.motorsport.com/rss/f1/news/
+      - name: The Race
+        url: https://www.the-race.com/category/formula-1/rss/
+      - name: RaceFans
+        url: https://www.racefans.net/feed/
+      - name: PlanetF1
+        url: https://www.planetf1.com/rss
