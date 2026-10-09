@@ -1,0 +1,68 @@
+# The whole stack: docker compose up -d --build
+#
+# api, worker and bot are the same image started with different commands.
+# Postgres and Redis publish no ports: only the other containers can reach them.
+
+x-app: &app
+  build: .
+  image: newshub:local
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql://newshub:${POSTGRES_PASSWORD:-newshub}@postgres:5432/newshub
+    REDIS_URL: redis://redis:6379
+  volumes:
+    # Mounted so that editing modes.yaml only needs a restart, not a rebuild.
+    - ./config:/app/config:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *app
+    command: uvicorn newshub.api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "127.0.0.1:8000:8000" # this machine only, not the network
+
+  worker:
+    <<: *app
+    command: arq newshub.worker.WorkerSettings
+
+  bot:
+    <<: *app
+    command: python -m newshub.bot
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: newshub
+      POSTGRES_DB: newshub
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-newshub}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs once, when the data volume is first created.
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U newshub -d newshub"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
